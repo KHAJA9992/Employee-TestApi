@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="50892ded-eb34-487e-a137-22900390f29a" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="activemqtestcaseFlow1" doc:id="236f7773-a5c6-4ee4-9ccb-501fa2597a3b" >
+		<http:listener doc:name="Listener" doc:id="4feb36a6-b351-4ce8-b5f6-c94293a38dd1" config-ref="HTTP_Listener_config" path="/active"/>
+		<jms:publish doc:id="fabf31a5-3c62-4ec6-aa82-3dfdc7b1dac4" config-ref="JMS_Config" destination="mulequeue">
+			<jms:message outboundContentType="application/Json" />
+		</jms:publish>
+	</flow>
+	<flow name="activemqtestcaseFlow2" doc:id="a07d9a6d-42a1-47c0-b77b-ee0a5bcf2d72" >
+		<http:listener doc:name="Listener" doc:id="933a2925-014e-491f-a612-bf32745913b3" config-ref="HTTP_Listener_config" path="/active"/>
+		<jms:consume doc:name="Consume" doc:id="36f4d3aa-74bf-4d5b-b1ae-14c054767f3a" config-ref="JMS_Config" destination="mulequeue1">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:consume>
+	</flow>
+	<flow name="activemqtestcaseFlow" doc:id="26fb4ccc-a5a9-48a2-9347-c2699fd47b52" >
+		<jms:listener doc:name="On New Message" doc:id="833a964e-5808-4baf-a26c-0481687c7e87" config-ref="JMS_Config" destination="mulequeue" ackMode="MANUAL" inboundContentType="application/Json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="f2faadac-e31d-4648-bfda-5a43f18434cf" message="#['Received message payload -' ++ payload]"/>
+		<jms:ack doc:name="Ack" doc:id="0e84c161-b7d5-4692-811e-de9c8cbf237b" ackId="#[attributes.ackId]"/>
+		<jms:recover-session doc:name="Recover session" doc:id="307f427a-1783-493c-a861-7eea0e333b5b" ackId="#[attributes.ackId]"/>
+	</flow>
+</mule>

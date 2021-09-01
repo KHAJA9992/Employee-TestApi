@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="67bc5fcf-ed75-4c40-9a0e-5735c93b330c" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="classicmodels"/>
+	</db:config>
+	<sub-flow name="implementation_flowSub_Flow" doc:id="b89698f8-5c18-4c82-a3e5-5f4c54c25fc8" >
+		<db:insert doc:name="Insert" doc:id="7e78e9f8-6ba6-491d-ad31-4334b6c1273d" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from customers
+]]></db:sql>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="bc14c3ab-5363-474c-a949-2d7440228ca2" message="======insert db excueted==="/>
+	</sub-flow>
+	<sub-flow name="implementation_flowSub_Flow1" doc:id="2516857a-a113-4a3c-ba6a-6409f6520fd2" >
+		<db:select doc:name="/customers" doc:id="70714f03-c273-4a85-b12e-609b172649aa" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from customers
+]]></db:sql>
+		</db:select>
+	</sub-flow>
+</mule>

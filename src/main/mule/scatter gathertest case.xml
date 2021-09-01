@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="1e0836b6-b63f-4665-8882-5e2332d4da53">
+		<http:request-connection host="dummy.restapiexample.com" port="80" />
+	</http:request-config>
+	<flow name="scatter_gathertest_caseFlow" doc:id="16d62175-537f-4b23-865d-dda3755fad36" >
+		<http:listener doc:name="Listener" doc:id="28c1b79d-49b1-4c2a-9571-5bd70ccf236f" config-ref="HTTP_Listener_config" path="/scatter"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3b7c267c-ff97-401d-a3c3-f47bd3b46c92" message="===request processed to scatter gather====="/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="bbf6a0b9-4bfd-42a3-a1b3-b6663db13e49" >
+			<route >
+				<try doc:name="Try" doc:id="af5d8a58-ba6d-452e-afa8-d93104da1259" >
+					<http:request method="GET" doc:name="Request" doc:id="63eb6cb0-fb7e-4adf-be7a-594b0bda2944" config-ref="HTTP_Request_configuration" path="/api/v1/employees"/>
+					<ee:transform doc:name="Transform Message" doc:id="df080e64-584e-41b0-9934-1ed3c4d32cb2">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="6a1af85e-746f-4fac-ac3b-9c68fe9e5a8b" message='#["Target 1 time ::::    " ++ now() as String]' />
+					<error-handler>
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="524fa5b5-e455-49e2-ad29-46a34a0f96ae" >
+							<set-payload value='#["ERROR OCCURED IN TARGET 1"]' doc:name="Set Payload" doc:id="40c95d68-d25c-4f82-bd03-3381b70f1fb4" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</route>
+			<route >
+				<try doc:name="Try" doc:id="fafb6c83-4478-4ad8-b750-77af3af74422">
+					<db:select doc:name="Select" doc:id="3d737d08-bc04-43fc-9ecc-d087d8020f36" config-ref="Database_Config">
+					<db:sql><![CDATA[select * from customers]]></db:sql>
+				</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="b37f2cfb-d6f0-465e-9338-61c6c1e3d861">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="5c5a6688-b667-4c46-b27b-a169de227c90" message='#["Target 2 time ::::   " ++ now() as String]'/>
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="05d7ba8e-ffc6-4d1d-a01b-2cc5a161e3d8">
+							<set-payload value='#["ERROR OCCURED IN TARGET 2"]' doc:name="Set Payload" doc:id="1dddd871-ab4b-400f-8863-11f2af72e5cc" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="adc53a08-d016-4b0b-8332-8a68f9a3bdda" message="====after scatter gather ====="/>
+		<ee:transform doc:name="Transform Message" doc:id="bdb3537a-9c03-458b-a44d-153703bd8ed7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="3f2eb37d-f9d1-4d96-86f0-d1dee80e29a8" maxEntries="100" entryTtl="5" entryTtlUnit="HOURS" />
+	<flow name="Dataweave_test_casesFlow" doc:id="543ec4cd-33f3-4a13-8b48-980c044cca80" >
+		<http:listener doc:name="Listener" doc:id="a0f82f87-28aa-48fe-bbb2-8e9c9f8f49a8" config-ref="HTTP_Listener_config" path="/db"/>
+		<db:select doc:name="Select" doc:id="559ec070-5c0c-447b-a656-42f6d79d26ae" config-ref="Database_Config">
+			<db:sql ><![CDATA[Select * from customers where contactFirstName =:king]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	king : attributes.queryParams.king
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a062b7ab-65a2-47df-88ef-c734d0ab9b6a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.customerNumber]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d84b6a74-0d60-4656-a94f-56ac9363c0c3" />
+	</flow>
+</mule>

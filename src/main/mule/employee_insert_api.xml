@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0d175176-2454-41b2-afcf-e0d2ab89a349" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="employee_insert_apiFlow" doc:id="169cd33b-e9ec-4e84-84b1-8cc6561828df" >
+		<http:listener doc:name="Listener" doc:id="1d92212b-187e-4531-9d9a-cf87820c5085" config-ref="HTTP_Listener_config" path="/employee_insert"/>
+		<choice doc:name="Choice" doc:id="5dbda79f-5695-45df-9165-23ca84b4254a" >
+			<when expression="insert_employees">
+				<flow-ref doc:name="insert _employees" doc:id="e3099ad5-ef4b-4519-8dd9-7e0a0a5b1c6d" name="implementation_flowSub_Flow"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="get_employees" doc:id="a1bae154-bb94-456a-a41d-87625cce5de1" name="implementation_flowSub_Flow1"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

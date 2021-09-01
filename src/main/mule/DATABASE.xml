@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="18c35abf-3687-4b7b-ad8e-8d50b73bd5f3" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="classicmodels" />
+	</db:config>
+	<os:object-store name="test_os" doc:name="Object store" doc:id="b8b67aa2-ed09-4fff-9b6c-1f0940d69fcf" maxEntries="100" entryTtl="5" entryTtlUnit="HOURS" />
+	<api-gateway:autodiscovery apiId="17174065" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="7fc82dd7-5da1-4d03-b0e7-cb05cd34ea8b" flowRef="employee_insert_apiFlow" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="658dde5c-c033-40e2-afad-4ea469399fe5" >
+		<file:connection workingDir="C:\Users\SHAIK KHAJA PEER\AnypointStudio\studio-workspace\employee_insert_api\src\main\resources\examples" />
+	</file:config>
+	<flow name="DATABASEFlow" doc:id="8fbbfa1d-7a14-4bad-a688-946094d81a3b" >
+		<http:listener doc:name="Listener" doc:id="2db32e34-41d4-4183-97dd-fad87844d2cf" config-ref="HTTP_Listener_config" path="/dbselect"/>
+		<db:select doc:name="Select" doc:id="7c657866-9fb7-433d-8195-42760a4cbf61" config-ref="Database_Config2">
+			<db:sql ><![CDATA[select * from customers]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="8163a2cf-f41d-45a4-bd9e-8852b9d32ed4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="DATABASEFlow1" doc:id="44047525-b771-4610-9e6e-04886fa753f2" >
+		<http:listener doc:name="Listener" doc:id="f61c848c-15c9-43b8-9d2d-036dac2c1345" config-ref="HTTP_Listener_config" path="/os"/>
+		<os:store doc:name="Store" doc:id="cdf5f1fe-839e-43dc-b723-a239b485cc47" key='#[now() as String {format : "yyyymmddhhmmss"}]' objectStore="test_os"/>
+	</flow>
+	<flow name="Objectstore-retrieve" doc:id="98340c82-efce-4107-85f8-cb8316376818" >
+		<http:listener doc:name="Listener" doc:id="9d2f60ef-1f39-457c-b4c8-3f580458df0a" config-ref="HTTP_Listener_config" path="/retrievekeys"/>
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="5621328c-dafe-4e44-b59c-6e44d64851db" objectStore="Object_store"/>
+		<foreach doc:name="For Each" doc:id="4031eb62-d765-4247-bfeb-873c8875dc4a">
+			<set-variable value="#[payload]" doc:name="Set Variable" doc:id="017d8770-c8b9-43f1-8684-1c2f89d9d0ca" variableName="vkey"/>
+			<os:retrieve doc:name="Retrieve" doc:id="7dca1e64-0122-45a8-9c72-4d08be732ce4" key="#[vars.vkey]" objectStore="test_os"/>
+			<logger level="INFO" doc:name="Logger" doc:id="b8c6783d-6860-47da-b79f-a0b16f4e45ba" message="#[payload]"/>
+			<os:remove doc:name="Remove" doc:id="85c22af8-6435-4883-9a1e-d4fe9eed21df" key="#[vars.vkey]" objectStore="test_os"/>
+		</foreach>
+	</flow>
+	<flow name="Objectstoreclear" doc:id="e2672b55-a66b-417c-a32b-1ad0d80a420a" >
+		<http:listener doc:name="Listener" doc:id="fb483273-5013-4795-a6cb-dcba7025004f" config-ref="HTTP_Listener_config" path="/os"/>
+		<os:clear doc:name="Clear" doc:id="8b247dba-253f-4171-bce1-26864a62df9e" />
+	</flow>
+</mule>
